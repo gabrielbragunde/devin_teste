@@ -15,34 +15,28 @@ public static class ClienteEndpoints
             CriarClienteDto dto,
             CriarClienteUseCase useCase) =>
         {
-            try
-            {
-                var resultado = await useCase.ExecutarAsync(dto);
-                return Results.Created($"/api/clientes/{resultado.Id}", resultado);
-            }
-            catch (ArgumentException ex)
-            {
-                return Results.BadRequest(new { erro = ex.Message });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Results.Conflict(new { erro = ex.Message });
-            }
+            var resultado = await useCase.ExecutarAsync(dto);
+            
+            if (resultado.IsFailure)
+                return Results.BadRequest(new { erro = resultado.Error });
+            
+            return Results.Created($"/api/clientes/{resultado.Value.Id}", resultado.Value);
         })
         .WithName("CriarCliente")
         .WithSummary("Criar um novo cliente")
         .Produces<ClienteDto>(StatusCodes.Status201Created)
-        .Produces(StatusCodes.Status400BadRequest)
-        .Produces(StatusCodes.Status409Conflict);
+        .Produces(StatusCodes.Status400BadRequest);
 
         group.MapGet("/cpf/{cpf}", async (
             string cpf,
             ObterClientePorCpfUseCase useCase) =>
         {
             var resultado = await useCase.ExecutarAsync(cpf);
-            return resultado != null 
-                ? Results.Ok(resultado) 
-                : Results.NotFound(new { erro = "Cliente não encontrado" });
+            
+            if (resultado.IsFailure)
+                return Results.NotFound(new { erro = resultado.Error });
+            
+            return Results.Ok(resultado.Value);
         })
         .WithName("ObterClientePorCpf")
         .WithSummary("Obter cliente por CPF")
@@ -54,24 +48,16 @@ public static class ClienteEndpoints
             AtualizarClienteDto dto,
             AtualizarClienteUseCase useCase) =>
         {
-            try
-            {
-                var resultado = await useCase.ExecutarAsync(id, dto);
-                return Results.Ok(resultado);
-            }
-            catch (ArgumentException ex)
-            {
-                return Results.BadRequest(new { erro = ex.Message });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Results.NotFound(new { erro = ex.Message });
-            }
+            var resultado = await useCase.ExecutarAsync(id, dto);
+            
+            if (resultado.IsFailure)
+                return Results.BadRequest(new { erro = resultado.Error });
+            
+            return Results.Ok(resultado.Value);
         })
         .WithName("AtualizarCliente")
         .WithSummary("Atualizar dados do cliente")
         .Produces<ClienteDto>(StatusCodes.Status200OK)
-        .Produces(StatusCodes.Status400BadRequest)
-        .Produces(StatusCodes.Status404NotFound);
+        .Produces(StatusCodes.Status400BadRequest);
     }
 }

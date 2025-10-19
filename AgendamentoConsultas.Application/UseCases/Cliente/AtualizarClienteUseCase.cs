@@ -1,5 +1,7 @@
 using AgendamentoConsultas.Application.DTOs.Cliente;
+using AgendamentoConsultas.Application.Extensions;
 using AgendamentoConsultas.Application.Interfaces;
+using AgendamentoConsultas.Domain.Patterns;
 
 namespace AgendamentoConsultas.Application.UseCases.Cliente;
 
@@ -12,26 +14,20 @@ public class AtualizarClienteUseCase
         _clienteRepository = clienteRepository;
     }
 
-    public async Task<ClienteDto> ExecutarAsync(Guid id, AtualizarClienteDto dto)
+    public async Task<Result<ClienteDto>> ExecutarAsync(Guid id, AtualizarClienteDto dto)
     {
         var cliente = await _clienteRepository.ObterPorIdAsync(id);
         
         if (cliente == null)
-            throw new InvalidOperationException("Cliente não encontrado");
+            return Result.Failure<ClienteDto>("Cliente não encontrado");
 
-        cliente.Atualizar(dto.Nome, dto.Email, dto.Telefone, dto.DataNascimento);
+        var atualizacaoResult = cliente.Atualizar(dto.Nome, dto.Email, dto.Telefone, dto.DataNascimento);
+        
+        if (atualizacaoResult.IsFailure)
+            return Result.Failure<ClienteDto>(atualizacaoResult.Error);
         
         await _clienteRepository.AtualizarAsync(cliente);
 
-        return new ClienteDto(
-            cliente.Id,
-            cliente.Nome,
-            cliente.Cpf,
-            cliente.Email,
-            cliente.Telefone,
-            cliente.DataNascimento,
-            cliente.CriadoEm,
-            cliente.AtualizadoEm
-        );
+        return Result.Success(cliente.ToDto());
     }
 }

@@ -18,6 +18,70 @@ O projeto está organizado em camadas seguindo Clean Architecture:
 - Swagger/OpenAPI
 - Banco de dados em memória (InMemory)
 
+## Padrões de Design Implementados
+
+### Result Pattern
+O Result Pattern é utilizado para encapsular o resultado de operações, permitindo retornar sucesso ou falha de forma explícita, sem uso de exceções para controle de fluxo.
+
+**Benefícios:**
+- Elimina exceções para controle de fluxo de negócio
+- Torna explícito quando uma operação pode falhar
+- Facilita o tratamento de erros de forma funcional
+- Melhora a performance ao evitar stack unwinding de exceções
+
+**Exemplo de uso:**
+```csharp
+var clienteResult = Cliente.Criar(nome, cpf, email, telefone, dataNascimento);
+if (clienteResult.IsFailure)
+    return Result.Failure<ClienteDto>(clienteResult.Error);
+
+return Result.Success(clienteResult.Value.ToDto());
+```
+
+### Notification Pattern
+O Notification Pattern é usado para coletar múltiplos erros de validação antes de retornar, permitindo que o usuário veja todos os problemas de uma vez.
+
+**Benefícios:**
+- Coleta múltiplos erros de validação
+- Melhora a experiência do usuário ao mostrar todos os erros de uma vez
+- Separa a lógica de validação da lógica de negócio
+- Facilita testes unitários
+
+**Exemplo de uso:**
+```csharp
+var notification = new Notification();
+ValidarDados(nome, cpf, email, telefone, dataNascimento, notification);
+
+if (notification.HasErrors)
+    return Result.Failure<Cliente>(notification.GetErrorsAsString());
+```
+
+### Extension Methods
+Métodos de extensão são utilizados para converter entidades de domínio em DTOs, mantendo a separação de responsabilidades e evitando código duplicado.
+
+**Benefícios:**
+- Elimina código duplicado de mapeamento
+- Mantém a lógica de conversão centralizada
+- Facilita manutenção e testes
+- Melhora a legibilidade do código
+
+**Exemplo de uso:**
+```csharp
+public static ClienteDto ToDto(this Cliente cliente)
+{
+    return new ClienteDto(
+        cliente.Id,
+        cliente.Nome,
+        cliente.Cpf,
+        cliente.Email,
+        cliente.Telefone,
+        cliente.DataNascimento,
+        cliente.CriadoEm,
+        cliente.AtualizadoEm
+    );
+}
+```
+
 ## Estrutura do Projeto
 
 ```
@@ -25,13 +89,19 @@ AgendamentoConsultas/
 ├── AgendamentoConsultas.Domain/
 │   ├── Common/
 │   │   └── BaseEntity.cs
-│   └── Entities/
-│       ├── Cliente.cs
-│       └── Agendamento.cs
+│   ├── Entities/
+│   │   ├── Cliente.cs
+│   │   └── Agendamento.cs
+│   └── Patterns/
+│       ├── Result.cs
+│       └── Notification.cs
 ├── AgendamentoConsultas.Application/
 │   ├── DTOs/
 │   │   ├── Cliente/
 │   │   └── Agendamento/
+│   ├── Extensions/
+│   │   ├── ClienteExtensions.cs
+│   │   └── AgendamentoExtensions.cs
 │   ├── Interfaces/
 │   │   ├── IClienteRepository.cs
 │   │   └── IAgendamentoRepository.cs
@@ -279,7 +349,9 @@ Cancelar um agendamento
 - Nomes descritivos e significativos
 - Métodos pequenos e focados
 - Validações no domínio
-- Tratamento adequado de exceções
+- Uso de Result Pattern ao invés de exceções para controle de fluxo
+- Notification Pattern para validações
+- Extension Methods para mapeamento de objetos
 - Código auto-explicativo
 
 ## Testes

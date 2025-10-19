@@ -1,5 +1,7 @@
 using AgendamentoConsultas.Application.DTOs.Cliente;
+using AgendamentoConsultas.Application.Extensions;
 using AgendamentoConsultas.Application.Interfaces;
+using AgendamentoConsultas.Domain.Patterns;
 
 namespace AgendamentoConsultas.Application.UseCases.Cliente;
 
@@ -12,22 +14,13 @@ public class ObterClientePorCpfUseCase
         _clienteRepository = clienteRepository;
     }
 
-    public async Task<ClienteDto?> ExecutarAsync(string cpf)
+    public async Task<Result<ClienteDto>> ExecutarAsync(string cpf)
     {
         var cliente = await _clienteRepository.ObterPorCpfAsync(cpf);
         
         if (cliente == null)
-            return null;
+            return Result.Failure<ClienteDto>("Cliente não encontrado");
 
-        return new ClienteDto(
-            cliente.Id,
-            cliente.Nome,
-            cliente.Cpf,
-            cliente.Email,
-            cliente.Telefone,
-            cliente.DataNascimento,
-            cliente.CriadoEm,
-            cliente.AtualizadoEm
-        );
+        return Result.Success(cliente.ToDto());
     }
 }

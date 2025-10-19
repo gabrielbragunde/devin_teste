@@ -1,5 +1,7 @@
 using AgendamentoConsultas.Application.DTOs.Agendamento;
+using AgendamentoConsultas.Application.Extensions;
 using AgendamentoConsultas.Application.Interfaces;
+using AgendamentoConsultas.Domain.Patterns;
 
 namespace AgendamentoConsultas.Application.UseCases.Agendamento;
 
@@ -16,26 +18,20 @@ public class CancelarAgendamentoUseCase
         _clienteRepository = clienteRepository;
     }
 
-    public async Task<AgendamentoDto> ExecutarAsync(Guid id)
+    public async Task<Result<AgendamentoDto>> ExecutarAsync(Guid id)
     {
         var agendamento = await _agendamentoRepository.ObterPorIdAsync(id);
         if (agendamento == null)
-            throw new InvalidOperationException("Agendamento não encontrado");
+            return Result.Failure<AgendamentoDto>("Agendamento não encontrado");
 
-        agendamento.Cancelar();
+        var cancelarResult = agendamento.Cancelar();
+        if (cancelarResult.IsFailure)
+            return Result.Failure<AgendamentoDto>(cancelarResult.Error);
+        
         await _agendamentoRepository.AtualizarAsync(agendamento);
 
         var cliente = await _clienteRepository.ObterPorIdAsync(agendamento.ClienteId);
 
-        return new AgendamentoDto(
-            agendamento.Id,
-            agendamento.ClienteId,
-            cliente?.Nome ?? "Cliente não encontrado",
-            agendamento.DataHora,
-            agendamento.Status.ToString(),
-            agendamento.Observacoes,
-            agendamento.CriadoEm,
-            agendamento.AtualizadoEm
-        );
+        return Result.Success(agendamento.ToDto(cliente?.Nome ?? "Cliente não encontrado"));
     }
 }

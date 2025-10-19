@@ -1,6 +1,8 @@
 using AgendamentoConsultas.Application.DTOs.Cliente;
+using AgendamentoConsultas.Application.Extensions;
 using AgendamentoConsultas.Application.Interfaces;
 using AgendamentoConsultas.Domain.Entities;
+using AgendamentoConsultas.Domain.Patterns;
 
 namespace AgendamentoConsultas.Application.UseCases.Cliente;
 
@@ -13,13 +15,13 @@ public class CriarClienteUseCase
         _clienteRepository = clienteRepository;
     }
 
-    public async Task<ClienteDto> ExecutarAsync(CriarClienteDto dto)
+    public async Task<Result<ClienteDto>> ExecutarAsync(CriarClienteDto dto)
     {
         var clienteExistente = await _clienteRepository.ObterPorCpfAsync(dto.Cpf);
         if (clienteExistente != null)
-            throw new InvalidOperationException("Já existe um cliente cadastrado com este CPF");
+            return Result.Failure<ClienteDto>("Já existe um cliente cadastrado com este CPF");
 
-        var cliente = new Domain.Entities.Cliente(
+        var clienteResult = Domain.Entities.Cliente.Criar(
             dto.Nome,
             dto.Cpf,
             dto.Email,
@@ -27,17 +29,11 @@ public class CriarClienteUseCase
             dto.DataNascimento
         );
 
-        await _clienteRepository.AdicionarAsync(cliente);
+        if (clienteResult.IsFailure)
+            return Result.Failure<ClienteDto>(clienteResult.Error);
 
-        return new ClienteDto(
-            cliente.Id,
-            cliente.Nome,
-            cliente.Cpf,
-            cliente.Email,
-            cliente.Telefone,
-            cliente.DataNascimento,
-            cliente.CriadoEm,
-            cliente.AtualizadoEm
-        );
+        await _clienteRepository.AdicionarAsync(clienteResult.Value);
+
+        return Result.Success(clienteResult.Value.ToDto());
     }
 }

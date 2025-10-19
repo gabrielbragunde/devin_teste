@@ -1,5 +1,6 @@
 using AgendamentoConsultas.Application.DTOs.Agendamento;
 using AgendamentoConsultas.Application.Interfaces;
+using AgendamentoConsultas.Domain.Patterns;
 
 namespace AgendamentoConsultas.Application.UseCases.Agendamento;
 
@@ -12,13 +13,13 @@ public class ObterHorariosDisponiveisUseCase
         _agendamentoRepository = agendamentoRepository;
     }
 
-    public async Task<IEnumerable<HorarioDisponivelDto>> ExecutarAsync(DateTime data)
+    public async Task<Result<IEnumerable<HorarioDisponivelDto>>> ExecutarAsync(DateTime data)
     {
         if (data.Date < DateTime.Today)
-            throw new ArgumentException("Não é possível consultar horários de datas passadas");
+            return Result.Failure<IEnumerable<HorarioDisponivelDto>>("Não é possível consultar horários de datas passadas");
 
         if (data.DayOfWeek == DayOfWeek.Saturday || data.DayOfWeek == DayOfWeek.Sunday)
-            return Enumerable.Empty<HorarioDisponivelDto>();
+            return Result.Success(Enumerable.Empty<HorarioDisponivelDto>());
 
         var agendamentos = await _agendamentoRepository.ObterPorDataAsync(data.Date);
         var horariosOcupados = agendamentos
@@ -37,6 +38,6 @@ public class ObterHorariosDisponiveisUseCase
             dataAtual = dataAtual.AddMinutes(30);
         }
 
-        return horarios;
+        return Result.Success<IEnumerable<HorarioDisponivelDto>>(horarios);
     }
 }

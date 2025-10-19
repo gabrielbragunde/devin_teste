@@ -15,39 +15,28 @@ public static class AgendamentoEndpoints
             CriarAgendamentoDto dto,
             CriarAgendamentoUseCase useCase) =>
         {
-            try
-            {
-                var resultado = await useCase.ExecutarAsync(dto);
-                return Results.Created($"/api/agendamentos/{resultado.Id}", resultado);
-            }
-            catch (ArgumentException ex)
-            {
-                return Results.BadRequest(new { erro = ex.Message });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Results.Conflict(new { erro = ex.Message });
-            }
+            var resultado = await useCase.ExecutarAsync(dto);
+            
+            if (resultado.IsFailure)
+                return Results.BadRequest(new { erro = resultado.Error });
+            
+            return Results.Created($"/api/agendamentos/{resultado.Value.Id}", resultado.Value);
         })
         .WithName("CriarAgendamento")
         .WithSummary("Criar um novo agendamento")
         .Produces<AgendamentoDto>(StatusCodes.Status201Created)
-        .Produces(StatusCodes.Status400BadRequest)
-        .Produces(StatusCodes.Status409Conflict);
+        .Produces(StatusCodes.Status400BadRequest);
 
         group.MapGet("/cliente/{clienteId:guid}", async (
             Guid clienteId,
             ObterAgendamentosPorClienteUseCase useCase) =>
         {
-            try
-            {
-                var resultado = await useCase.ExecutarAsync(clienteId);
-                return Results.Ok(resultado);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Results.NotFound(new { erro = ex.Message });
-            }
+            var resultado = await useCase.ExecutarAsync(clienteId);
+            
+            if (resultado.IsFailure)
+                return Results.NotFound(new { erro = resultado.Error });
+            
+            return Results.Ok(resultado.Value);
         })
         .WithName("ObterAgendamentosPorCliente")
         .WithSummary("Obter todos os agendamentos de um cliente")
@@ -58,15 +47,12 @@ public static class AgendamentoEndpoints
             DateTime data,
             ObterHorariosDisponiveisUseCase useCase) =>
         {
-            try
-            {
-                var resultado = await useCase.ExecutarAsync(data);
-                return Results.Ok(resultado);
-            }
-            catch (ArgumentException ex)
-            {
-                return Results.BadRequest(new { erro = ex.Message });
-            }
+            var resultado = await useCase.ExecutarAsync(data);
+            
+            if (resultado.IsFailure)
+                return Results.BadRequest(new { erro = resultado.Error });
+            
+            return Results.Ok(resultado.Value);
         })
         .WithName("ObterHorariosDisponiveis")
         .WithSummary("Obter horários disponíveis para uma data")
@@ -78,43 +64,32 @@ public static class AgendamentoEndpoints
             ReagendarDto dto,
             ReagendarUseCase useCase) =>
         {
-            try
-            {
-                var resultado = await useCase.ExecutarAsync(id, dto);
-                return Results.Ok(resultado);
-            }
-            catch (ArgumentException ex)
-            {
-                return Results.BadRequest(new { erro = ex.Message });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Results.NotFound(new { erro = ex.Message });
-            }
+            var resultado = await useCase.ExecutarAsync(id, dto);
+            
+            if (resultado.IsFailure)
+                return Results.BadRequest(new { erro = resultado.Error });
+            
+            return Results.Ok(resultado.Value);
         })
         .WithName("ReagendarAgendamento")
         .WithSummary("Reagendar um agendamento existente")
         .Produces<AgendamentoDto>(StatusCodes.Status200OK)
-        .Produces(StatusCodes.Status400BadRequest)
-        .Produces(StatusCodes.Status404NotFound);
+        .Produces(StatusCodes.Status400BadRequest);
 
         group.MapPut("/{id:guid}/cancelar", async (
             Guid id,
             CancelarAgendamentoUseCase useCase) =>
         {
-            try
-            {
-                var resultado = await useCase.ExecutarAsync(id);
-                return Results.Ok(resultado);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Results.NotFound(new { erro = ex.Message });
-            }
+            var resultado = await useCase.ExecutarAsync(id);
+            
+            if (resultado.IsFailure)
+                return Results.BadRequest(new { erro = resultado.Error });
+            
+            return Results.Ok(resultado.Value);
         })
         .WithName("CancelarAgendamento")
         .WithSummary("Cancelar um agendamento")
         .Produces<AgendamentoDto>(StatusCodes.Status200OK)
-        .Produces(StatusCodes.Status404NotFound);
+        .Produces(StatusCodes.Status400BadRequest);
     }
 }

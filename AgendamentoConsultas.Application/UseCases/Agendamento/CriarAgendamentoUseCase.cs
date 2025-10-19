@@ -1,5 +1,7 @@
 using AgendamentoConsultas.Application.DTOs.Agendamento;
+using AgendamentoConsultas.Application.Extensions;
 using AgendamentoConsultas.Application.Interfaces;
+using AgendamentoConsultas.Domain.Patterns;
 
 namespace AgendamentoConsultas.Application.UseCases.Agendamento;
 
@@ -16,33 +18,27 @@ public class CriarAgendamentoUseCase
         _clienteRepository = clienteRepository;
     }
 
-    public async Task<AgendamentoDto> ExecutarAsync(CriarAgendamentoDto dto)
+    public async Task<Result<AgendamentoDto>> ExecutarAsync(CriarAgendamentoDto dto)
     {
         var cliente = await _clienteRepository.ObterPorIdAsync(dto.ClienteId);
         if (cliente == null)
-            throw new InvalidOperationException("Cliente não encontrado");
+            return Result.Failure<AgendamentoDto>("Cliente não encontrado");
 
         var horarioOcupado = await _agendamentoRepository.ExisteAgendamentoNoHorarioAsync(dto.DataHora);
         if (horarioOcupado)
-            throw new InvalidOperationException("Já existe um agendamento neste horário");
+            return Result.Failure<AgendamentoDto>("Já existe um agendamento neste horário");
 
-        var agendamento = new Domain.Entities.Agendamento(
+        var agendamentoResult = Domain.Entities.Agendamento.Criar(
             dto.ClienteId,
             dto.DataHora,
             dto.Observacoes
         );
 
-        await _agendamentoRepository.AdicionarAsync(agendamento);
+        if (agendamentoResult.IsFailure)
+            return Result.Failure<AgendamentoDto>(agendamentoResult.Error);
 
-        return new AgendamentoDto(
-            agendamento.Id,
-            agendamento.ClienteId,
-            cliente.Nome,
-            agendamento.DataHora,
-            agendamento.Status.ToString(),
-            agendamento.Observacoes,
-            agendamento.CriadoEm,
-            agendamento.AtualizadoEm
-        );
+        await _agendamentoRepository.AdicionarAsync(agendamentoResult.Value);
+
+        return Result.Success(agendamentoResult.Value.ToDto(cliente.Nome));
     }
 }

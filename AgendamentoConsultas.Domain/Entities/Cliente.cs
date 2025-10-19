@@ -1,4 +1,5 @@
 using AgendamentoConsultas.Domain.Common;
+using AgendamentoConsultas.Domain.Patterns;
 
 namespace AgendamentoConsultas.Domain.Entities;
 
@@ -12,10 +13,8 @@ public class Cliente : BaseEntity
 
     private Cliente() { }
 
-    public Cliente(string nome, string cpf, string email, string telefone, DateTime dataNascimento)
+    private Cliente(string nome, string cpf, string email, string telefone, DateTime dataNascimento)
     {
-        ValidarDados(nome, cpf, email, telefone, dataNascimento);
-        
         Nome = nome;
         Cpf = cpf;
         Email = email;
@@ -23,49 +22,68 @@ public class Cliente : BaseEntity
         DataNascimento = dataNascimento;
     }
 
-    public void Atualizar(string nome, string email, string telefone, DateTime dataNascimento)
+    public static Result<Cliente> Criar(string nome, string cpf, string email, string telefone, DateTime dataNascimento)
     {
+        var notification = new Notification();
+        
+        ValidarDados(nome, cpf, email, telefone, dataNascimento, notification);
+        
+        if (notification.HasErrors)
+            return Result.Failure<Cliente>(notification.GetErrorsAsString());
+        
+        var cliente = new Cliente(nome, cpf, email, telefone, dataNascimento);
+        return Result.Success(cliente);
+    }
+
+    public Result Atualizar(string nome, string email, string telefone, DateTime dataNascimento)
+    {
+        var notification = new Notification();
+        
         if (string.IsNullOrWhiteSpace(nome))
-            throw new ArgumentException("Nome não pode ser vazio", nameof(nome));
+            notification.AddError("Nome não pode ser vazio");
         
         if (string.IsNullOrWhiteSpace(email))
-            throw new ArgumentException("Email não pode ser vazio", nameof(email));
+            notification.AddError("Email não pode ser vazio");
         
         if (string.IsNullOrWhiteSpace(telefone))
-            throw new ArgumentException("Telefone não pode ser vazio", nameof(telefone));
+            notification.AddError("Telefone não pode ser vazio");
         
         if (dataNascimento >= DateTime.Today)
-            throw new ArgumentException("Data de nascimento inválida", nameof(dataNascimento));
+            notification.AddError("Data de nascimento inválida");
+
+        if (notification.HasErrors)
+            return Result.Failure(notification.GetErrorsAsString());
 
         Nome = nome;
         Email = email;
         Telefone = telefone;
         DataNascimento = dataNascimento;
         AtualizarDataModificacao();
+        
+        return Result.Success();
     }
 
-    private void ValidarDados(string nome, string cpf, string email, string telefone, DateTime dataNascimento)
+    private static void ValidarDados(string nome, string cpf, string email, string telefone, DateTime dataNascimento, Notification notification)
     {
         if (string.IsNullOrWhiteSpace(nome))
-            throw new ArgumentException("Nome não pode ser vazio", nameof(nome));
+            notification.AddError("Nome não pode ser vazio");
         
         if (string.IsNullOrWhiteSpace(cpf))
-            throw new ArgumentException("CPF não pode ser vazio", nameof(cpf));
-        
-        if (!ValidarCpf(cpf))
-            throw new ArgumentException("CPF inválido", nameof(cpf));
+            notification.AddError("CPF não pode ser vazio");
+        else if (!ValidarCpf(cpf))
+            notification.AddError("CPF inválido");
         
         if (string.IsNullOrWhiteSpace(email))
-            throw new ArgumentException("Email não pode ser vazio", nameof(email));
+            notification.AddError("Email não pode ser vazio");
         
         if (string.IsNullOrWhiteSpace(telefone))
-            throw new ArgumentException("Telefone não pode ser vazio", nameof(telefone));
+            notification.AddError("Telefone não pode ser vazio");
         
         if (dataNascimento >= DateTime.Today)
-            throw new ArgumentException("Data de nascimento inválida", nameof(dataNascimento));
+            notification.AddError("Data de nascimento inválida");
     }
 
-    private bool ValidarCpf(string cpf)
+    private static bool ValidarCpf(string cpf)
     {
         cpf = cpf.Replace(".", "").Replace("-", "").Trim();
         

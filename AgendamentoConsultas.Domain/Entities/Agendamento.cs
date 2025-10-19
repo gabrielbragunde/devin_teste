@@ -1,4 +1,5 @@
 using AgendamentoConsultas.Domain.Common;
+using AgendamentoConsultas.Domain.Patterns;
 
 namespace AgendamentoConsultas.Domain.Entities;
 
@@ -12,52 +13,84 @@ public class Agendamento : BaseEntity
 
     private Agendamento() { }
 
-    public Agendamento(Guid clienteId, DateTime dataHora, string? observacoes = null)
+    private Agendamento(Guid clienteId, DateTime dataHora, string? observacoes = null)
     {
-        ValidarDataHora(dataHora);
-        
         ClienteId = clienteId;
         DataHora = dataHora;
         Status = StatusAgendamento.Agendado;
         Observacoes = observacoes;
     }
 
-    public void Reagendar(DateTime novaDataHora)
+    public static Result<Agendamento> Criar(Guid clienteId, DateTime dataHora, string? observacoes = null)
     {
+        var notification = new Notification();
+        
+        ValidarDataHora(dataHora, notification);
+        
+        if (notification.HasErrors)
+            return Result.Failure<Agendamento>(notification.GetErrorsAsString());
+        
+        var agendamento = new Agendamento(clienteId, dataHora, observacoes);
+        return Result.Success(agendamento);
+    }
+
+    public Result Reagendar(DateTime novaDataHora)
+    {
+        var notification = new Notification();
+        
         if (Status == StatusAgendamento.Cancelado)
-            throw new InvalidOperationException("Não é possível reagendar um agendamento cancelado");
+            notification.AddError("Não é possível reagendar um agendamento cancelado");
         
         if (Status == StatusAgendamento.Concluido)
-            throw new InvalidOperationException("Não é possível reagendar um agendamento concluído");
+            notification.AddError("Não é possível reagendar um agendamento concluído");
         
-        ValidarDataHora(novaDataHora);
+        ValidarDataHora(novaDataHora, notification);
+        
+        if (notification.HasErrors)
+            return Result.Failure(notification.GetErrorsAsString());
         
         DataHora = novaDataHora;
         AtualizarDataModificacao();
+        
+        return Result.Success();
     }
 
-    public void Cancelar()
+    public Result Cancelar()
     {
+        var notification = new Notification();
+        
         if (Status == StatusAgendamento.Cancelado)
-            throw new InvalidOperationException("Agendamento já está cancelado");
+            notification.AddError("Agendamento já está cancelado");
         
         if (Status == StatusAgendamento.Concluido)
-            throw new InvalidOperationException("Não é possível cancelar um agendamento concluído");
+            notification.AddError("Não é possível cancelar um agendamento concluído");
+        
+        if (notification.HasErrors)
+            return Result.Failure(notification.GetErrorsAsString());
         
         Status = StatusAgendamento.Cancelado;
         AtualizarDataModificacao();
+        
+        return Result.Success();
     }
 
-    public void Concluir()
+    public Result Concluir()
     {
+        var notification = new Notification();
+        
         if (Status == StatusAgendamento.Cancelado)
-            throw new InvalidOperationException("Não é possível concluir um agendamento cancelado");
+            notification.AddError("Não é possível concluir um agendamento cancelado");
         
         if (Status == StatusAgendamento.Concluido)
-            throw new InvalidOperationException("Agendamento já está concluído");
+            notification.AddError("Agendamento já está concluído");
+        
+        if (notification.HasErrors)
+            return Result.Failure(notification.GetErrorsAsString());
         
         Status = StatusAgendamento.Concluido;
         AtualizarDataModificacao();
+        
+        return Result.Success();
     }
 
     public void AtualizarObservacoes(string? observacoes)
@@ -66,19 +99,19 @@ public class Agendamento : BaseEntity
         AtualizarDataModificacao();
     }
 
-    private void ValidarDataHora(DateTime dataHora)
+    private static void ValidarDataHora(DateTime dataHora, Notification notification)
     {
         if (dataHora <= DateTime.Now)
-            throw new ArgumentException("Data e hora do agendamento deve ser futura", nameof(dataHora));
+            notification.AddError("Data e hora do agendamento deve ser futura");
         
         if (dataHora.Minute != 0 && dataHora.Minute != 30)
-            throw new ArgumentException("Agendamentos devem ser em horários de 30 em 30 minutos", nameof(dataHora));
+            notification.AddError("Agendamentos devem ser em horários de 30 em 30 minutos");
         
         if (dataHora.Hour < 8 || dataHora.Hour >= 18)
-            throw new ArgumentException("Horário de atendimento é das 08:00 às 18:00", nameof(dataHora));
+            notification.AddError("Horário de atendimento é das 08:00 às 18:00");
         
         if (dataHora.DayOfWeek == DayOfWeek.Saturday || dataHora.DayOfWeek == DayOfWeek.Sunday)
-            throw new ArgumentException("Não há atendimento aos finais de semana", nameof(dataHora));
+            notification.AddError("Não há atendimento aos finais de semana");
     }
 }
 
