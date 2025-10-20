@@ -10,6 +10,6 @@ public interface IAgendamentoRepository
     Task<IEnumerable<Agendamento>> ObterTodosAsync();
     Task<bool> ExisteAgendamentoNoHorarioAsync(DateTime dataHora);
     Task<Agendamento> AdicionarAsync(Agendamento agendamento);
-    Task AtualizarAsync(Agendamento agendamento);
-    Task RemoverAsync(Guid id);
+    Task<bool> AtualizarAsync(Agendamento agendamento);
+    Task<bool> RemoverAsync(Guid id);
 }

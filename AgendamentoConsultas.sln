@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AgendamentoConsultas.Infras
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AgendamentoConsultas.API", "AgendamentoConsultas.API\AgendamentoConsultas.API.csproj", "{CDFE179E-5969-4F82-9639-30F23D0D12E2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AgendamentoConsultas.Tests", "AgendamentoConsultas.Tests\AgendamentoConsultas.Tests.csproj", "{FAD544D6-8536-4BF9-8ACB-3BA22552FEAD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,5 +38,9 @@ Global
 		{CDFE179E-5969-4F82-9639-30F23D0D12E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CDFE179E-5969-4F82-9639-30F23D0D12E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CDFE179E-5969-4F82-9639-30F23D0D12E2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FAD544D6-8536-4BF9-8ACB-3BA22552FEAD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FAD544D6-8536-4BF9-8ACB-3BA22552FEAD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FAD544D6-8536-4BF9-8ACB-3BA22552FEAD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FAD544D6-8536-4BF9-8ACB-3BA22552FEAD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

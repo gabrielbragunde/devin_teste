@@ -56,23 +56,25 @@ public class AgendamentoRepository : IAgendamentoRepository
         return Task.FromResult(agendamento);
     }
 
-    public Task AtualizarAsync(Agendamento agendamento)
+    public Task<bool> AtualizarAsync(Agendamento agendamento)
     {
         var index = _database.Agendamentos.FindIndex(a => a.Id == agendamento.Id);
         if (index >= 0)
         {
             _database.Agendamentos[index] = agendamento;
+            return Task.FromResult(true);
         }
-        return Task.CompletedTask;
+        return Task.FromResult(false);
     }
 
-    public Task RemoverAsync(Guid id)
+    public Task<bool> RemoverAsync(Guid id)
     {
         var agendamento = _database.Agendamentos.FirstOrDefault(a => a.Id == id);
         if (agendamento != null)
         {
             _database.Agendamentos.Remove(agendamento);
+            return Task.FromResult(true);
         }
-        return Task.CompletedTask;
+        return Task.FromResult(false);
     }
 }

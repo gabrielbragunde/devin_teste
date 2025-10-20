@@ -8,6 +8,6 @@ public interface IClienteRepository
     Task<Cliente?> ObterPorCpfAsync(string cpf);
     Task<IEnumerable<Cliente>> ObterTodosAsync();
     Task<Cliente> AdicionarAsync(Cliente cliente);
-    Task AtualizarAsync(Cliente cliente);
-    Task RemoverAsync(Guid id);
+    Task<bool> AtualizarAsync(Cliente cliente);
+    Task<bool> RemoverAsync(Guid id);
 }

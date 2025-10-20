@@ -28,7 +28,10 @@ public class CancelarAgendamentoUseCase
         if (cancelarResult.IsFailure)
             return Result.Failure<AgendamentoDto>(cancelarResult.Error);
         
-        await _agendamentoRepository.AtualizarAsync(agendamento);
+        var sucesso = await _agendamentoRepository.AtualizarAsync(agendamento);
+        
+        if (!sucesso)
+            return Result.Failure<AgendamentoDto>("Falha ao atualizar agendamento no repositório");
 
         var cliente = await _clienteRepository.ObterPorIdAsync(agendamento.ClienteId);
 

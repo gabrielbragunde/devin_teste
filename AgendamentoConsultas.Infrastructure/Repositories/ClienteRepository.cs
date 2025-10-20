@@ -38,23 +38,25 @@ public class ClienteRepository : IClienteRepository
         return Task.FromResult(cliente);
     }
 
-    public Task AtualizarAsync(Cliente cliente)
+    public Task<bool> AtualizarAsync(Cliente cliente)
     {
         var index = _database.Clientes.FindIndex(c => c.Id == cliente.Id);
         if (index >= 0)
         {
             _database.Clientes[index] = cliente;
+            return Task.FromResult(true);
         }
-        return Task.CompletedTask;
+        return Task.FromResult(false);
     }
 
-    public Task RemoverAsync(Guid id)
+    public Task<bool> RemoverAsync(Guid id)
     {
         var cliente = _database.Clientes.FirstOrDefault(c => c.Id == id);
         if (cliente != null)
         {
             _database.Clientes.Remove(cliente);
+            return Task.FromResult(true);
         }
-        return Task.CompletedTask;
+        return Task.FromResult(false);
     }
 }
