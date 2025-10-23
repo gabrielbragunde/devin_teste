@@ -40,9 +40,13 @@ public class ObterAgendamentosPorClienteUseCaseTests
             "Primeira consulta"
         ).Value;
 
+        var data2 = DateTime.Now.AddDays(2).Date.AddHours(14);
+        if (data2.DayOfWeek == DayOfWeek.Saturday) data2 = data2.AddDays(2);
+        if (data2.DayOfWeek == DayOfWeek.Sunday) data2 = data2.AddDays(1);
+
         var agendamento2 = AgendamentoConsultas.Domain.Entities.Agendamento.Criar(
             clienteId,
-            DateTime.Now.AddDays(2).Date.AddHours(14),
+            data2,
             "Segunda consulta"
         ).Value;
 

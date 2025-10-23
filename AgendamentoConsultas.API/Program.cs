@@ -7,6 +7,8 @@ using AgendamentoConsultas.Application.Validators.Cliente;
 using AgendamentoConsultas.Infrastructure.Repositories;
 using FluentValidation;
 using Scrutor;
+using HotChocolate.AspNetCore;
+using HotChocolate;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -51,6 +53,12 @@ builder.Services.AddScoped<ObterAgendamentosPorClienteUseCase>();
 builder.Services.AddScoped<ObterHorariosDisponiveisUseCase>();
 builder.Services.AddScoped<ReagendarUseCase>();
 builder.Services.AddScoped<CancelarAgendamentoUseCase>();
+builder.Services.AddScoped<PesquisarAgendamentosUseCase>();
+
+// GraphQL
+builder.Services
+    .AddGraphQLServer()
+    .AddQueryType<AgendamentoQueries>();
 
 var app = builder.Build();
 
@@ -76,5 +84,8 @@ app.MapGet("/", () => Results.Ok(new
 
 app.MapClienteEndpoints();
 app.MapAgendamentoEndpoints();
+
+// GraphQL endpoint
+app.MapGraphQL("/graphql");
 
 app.Run();

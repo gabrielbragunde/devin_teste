@@ -12,4 +12,10 @@ public interface IAgendamentoRepository
     Task<Agendamento> AdicionarAsync(Agendamento agendamento);
     Task<bool> AtualizarAsync(Agendamento agendamento);
     Task<bool> RemoverAsync(Guid id);
+    Task<IEnumerable<Agendamento>> PesquisarAsync(
+        Guid? clienteId,
+        DateTime? dataInicio,
+        DateTime? dataFim,
+        StatusAgendamento? status,
+        string? texto);
 }

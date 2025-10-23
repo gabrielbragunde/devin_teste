@@ -102,6 +102,10 @@ public class AgendamentoTests
         var dataHora = DateTime.Now.AddDays(1).Date.AddHours(10);
         var agendamento = Agendamento.Criar(clienteId, dataHora, "Primeira consulta").Value;
         var novaDataHora = DateTime.Now.AddDays(2).Date.AddHours(14);
+        while (novaDataHora.DayOfWeek == DayOfWeek.Saturday || novaDataHora.DayOfWeek == DayOfWeek.Sunday)
+        {
+            novaDataHora = novaDataHora.AddDays(1);
+        }
 
         var result = agendamento.Reagendar(novaDataHora);
 

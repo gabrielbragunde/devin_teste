@@ -22,7 +22,7 @@ public class AgendamentoRepository : IAgendamentoRepository
     public Task<IEnumerable<Agendamento>> ObterPorClienteIdAsync(Guid clienteId)
     {
         var agendamentos = _database.Agendamentos
-            .Where(a => a.ClienteId == clienteId)
+            .Where(a => a != null && a.ClienteId == clienteId)
             .OrderBy(a => a.DataHora)
             .ToList();
         return Task.FromResult<IEnumerable<Agendamento>>(agendamentos);
@@ -76,5 +76,46 @@ public class AgendamentoRepository : IAgendamentoRepository
             return Task.FromResult(true);
         }
         return Task.FromResult(false);
+    }
+
+    public Task<IEnumerable<Agendamento>> PesquisarAsync(
+        Guid? clienteId,
+        DateTime? dataInicio,
+        DateTime? dataFim,
+        StatusAgendamento? status,
+        string? texto)
+    {
+        IEnumerable<Agendamento> query = _database.Agendamentos;
+
+        if (clienteId.HasValue)
+        {
+            query = query.Where(a => a.ClienteId == clienteId.Value);
+        }
+
+        if (dataInicio.HasValue)
+        {
+            query = query.Where(a => a.DataHora >= dataInicio.Value);
+        }
+
+        if (dataFim.HasValue)
+        {
+            query = query.Where(a => a.DataHora <= dataFim.Value);
+        }
+
+        if (status.HasValue)
+        {
+            query = query.Where(a => a.Status == status.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(texto))
+        {
+            var termo = texto.Trim();
+            query = query.Where(a =>
+                (!string.IsNullOrEmpty(a.Observacoes) && a.Observacoes!.Contains(termo, StringComparison.OrdinalIgnoreCase))
+            );
+        }
+
+        var resultado = query.OrderBy(a => a.DataHora).ToList();
+        return Task.FromResult<IEnumerable<Agendamento>>(resultado);
     }
 }
