@@ -1,8 +1,12 @@
 using AgendamentoConsultas.API.Endpoints;
+using AgendamentoConsultas.Application.DTOs.Cliente;
 using AgendamentoConsultas.Application.Interfaces;
 using AgendamentoConsultas.Application.UseCases.Agendamento;
 using AgendamentoConsultas.Application.UseCases.Cliente;
+using AgendamentoConsultas.Application.Validators.Cliente;
 using AgendamentoConsultas.Infrastructure.Repositories;
+using FluentValidation;
+using Scrutor;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,9 +34,17 @@ builder.Services.AddCors(options =>
 builder.Services.AddSingleton<IClienteRepository, ClienteRepository>();
 builder.Services.AddSingleton<IAgendamentoRepository, AgendamentoRepository>();
 
-builder.Services.AddScoped<CriarClienteUseCase>();
-builder.Services.AddScoped<ObterClientePorCpfUseCase>();
-builder.Services.AddScoped<AtualizarClienteUseCase>();
+// Validators
+builder.Services.AddScoped<IValidator<CriarClienteDto>, CriarClienteDtoValidator>();
+builder.Services.AddScoped<IValidator<AtualizarClienteDto>, AtualizarClienteDtoValidator>();
+
+// Cliente use cases with decorators
+builder.Services.AddScoped<ICriarClienteUseCase, CriarClienteUseCase>();
+builder.Services.AddScoped<IObterClientePorCpfUseCase, ObterClientePorCpfUseCase>();
+builder.Services.AddScoped<IAtualizarClienteUseCase, AtualizarClienteUseCase>();
+
+builder.Services.Decorate<ICriarClienteUseCase, CriarClienteValidationDecorator>();
+builder.Services.Decorate<IAtualizarClienteUseCase, AtualizarClienteValidationDecorator>();
 
 builder.Services.AddScoped<CriarAgendamentoUseCase>();
 builder.Services.AddScoped<ObterAgendamentosPorClienteUseCase>();

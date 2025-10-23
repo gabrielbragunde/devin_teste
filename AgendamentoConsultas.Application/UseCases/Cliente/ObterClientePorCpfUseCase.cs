@@ -5,7 +5,7 @@ using AgendamentoConsultas.Domain.Patterns;
 
 namespace AgendamentoConsultas.Application.UseCases.Cliente;
 
-public class ObterClientePorCpfUseCase
+public class ObterClientePorCpfUseCase : IObterClientePorCpfUseCase
 {
     private readonly IClienteRepository _clienteRepository;
 
