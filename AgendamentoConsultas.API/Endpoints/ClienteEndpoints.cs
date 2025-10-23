@@ -13,7 +13,7 @@ public static class ClienteEndpoints
 
         group.MapPost("/", async (
             CriarClienteDto dto,
-            CriarClienteUseCase useCase) =>
+            ICriarClienteUseCase useCase) =>
         {
             var resultado = await useCase.ExecutarAsync(dto);
             
@@ -29,7 +29,7 @@ public static class ClienteEndpoints
 
         group.MapGet("/cpf/{cpf}", async (
             string cpf,
-            ObterClientePorCpfUseCase useCase) =>
+            IObterClientePorCpfUseCase useCase) =>
         {
             var resultado = await useCase.ExecutarAsync(cpf);
             
@@ -46,7 +46,7 @@ public static class ClienteEndpoints
         group.MapPut("/{id:guid}", async (
             Guid id,
             AtualizarClienteDto dto,
-            AtualizarClienteUseCase useCase) =>
+            IAtualizarClienteUseCase useCase) =>
         {
             var resultado = await useCase.ExecutarAsync(id, dto);
             

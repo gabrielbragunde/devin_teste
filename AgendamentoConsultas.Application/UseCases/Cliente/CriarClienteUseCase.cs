@@ -1,32 +1,22 @@
 using AgendamentoConsultas.Application.DTOs.Cliente;
 using AgendamentoConsultas.Application.Extensions;
 using AgendamentoConsultas.Application.Interfaces;
-using AgendamentoConsultas.Application.Validators.Cliente;
 using AgendamentoConsultas.Domain.Entities;
 using AgendamentoConsultas.Domain.Patterns;
 
 namespace AgendamentoConsultas.Application.UseCases.Cliente;
 
-public class CriarClienteUseCase
+public class CriarClienteUseCase : ICriarClienteUseCase
 {
     private readonly IClienteRepository _clienteRepository;
-    private readonly CriarClienteDtoValidator _validator;
 
     public CriarClienteUseCase(IClienteRepository clienteRepository)
     {
         _clienteRepository = clienteRepository;
-        _validator = new CriarClienteDtoValidator();
     }
 
     public async Task<Result<ClienteDto>> ExecutarAsync(CriarClienteDto dto)
     {
-        var validationResult = await _validator.ValidateAsync(dto);
-        if (!validationResult.IsValid)
-        {
-            var errors = string.Join("; ", validationResult.Errors.Select(e => e.ErrorMessage));
-            return Result.Failure<ClienteDto>(errors);
-        }
-
         var clienteExistente = await _clienteRepository.ObterPorCpfAsync(dto.Cpf);
         if (clienteExistente != null)
             return Result.Failure<ClienteDto>("Já existe um cliente cadastrado com este CPF");
